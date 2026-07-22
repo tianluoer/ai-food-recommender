@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="AI 外卖推荐助手 — 纠结今天吃什么？让饭饭帮你决定！">
+  <title>🍔 AI 外卖推荐 — 饭饭</title>
+  <style>
+    /* ==========================================
+       CSS 变量 & 基础重置
+       ========================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #FF6B35;
+      --orange-light: #FFF3E0;
+      --cream: #FFF8F0;
+      --green: #26A69A;
+      --text: #333333;
+      --text-light: #999999;
+      --bg: #FFF3E0;
+      --white: #FFFFFF;
+      --gray-border: #E0E0E0;
+      --user-bubble-bg: #E8F5E9;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.1);
+      --radius-bubble-ai: 18px 18px 18px 4px;
+      --radius-bubble-user: 18px 18px 4px 18px;
+    }
+
+    body {
+      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── App 容器 ── */
+    .app {
+      max-width: 600px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==========================================
+       顶栏
+       ========================================== */
+    .header {
+      background: linear-gradient(135deg, #FF6B35 0%, #FF8F5E 100%);
+      color: #fff;
+      padding: 16px 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 2px 12px rgba(255,107,53,0.25);
+    }
+
+    /* ==========================================
+       聊天区
+       ========================================== */
+    .chat-area {
+      flex: 1;
+      padding: 16px 14px 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ==========================================
+       欢迎页面 + 食物飘落
+       ========================================== */
+    .welcome {
+      text-align: center;
+      padding: 52px 20px 40px;
+      position: relative;
+      overflow: hidden;
+      min-height: 320px;
+    }
+    .welcome .logo {
+      font-size: 76px;
+      margin-bottom: 16px;
+      animation: logoBounce 2s ease-in-out infinite;
+    }
+    .welcome h2 {
+      color: var(--orange);
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+    .welcome p {
+      color: var(--text-light);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+    .welcome .start-btn {
+      padding: 14px 52px;
+      border: none;
+      border-radius: 32px;
+      background: linear-gradient(135deg, #FF6B35 0%, #FF8A50 100%);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 20px rgba(255,107,53,0.35);
+      transition: transform 0.18s, box-shadow 0.18s;
+      position: relative;
+      z-index: 5;
+    }
+    .welcome .start-btn:hover  { transform: scale(1.06); box-shadow: 0 8px 28px rgba(255,107,53,0.45); }
+    .welcome .start-btn:active { transform: scale(0.95); }
+
+    @keyframes logoBounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25%      { transform: translateY(-14px) rotate(-3deg); }
+      75%      { transform: translateY(-6px) rotate(3deg); }
+    }
+
+    /* 食物飘落 */
+    .food-float {
+      position: absolute;
+      font-size: 28px;
+      opacity: 0;
+      animation: floatUp 4s ease-in forwards;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translateY(100px) rotate(0deg) scale(0.6); }
+      15%  { opacity: 0.8; }
+      85%  { opacity: 0.6; }
+      100% { opacity: 0; transform: translateY(-320px) rotate(30deg) scale(1); }
+    }
+
+    /* ==========================================
+       聊天气泡
+       ========================================== */
+    .bubble {
+      max-width: 84%;
+      padding: 12px 16px;
+      border-radius: var(--radius-bubble-ai);
+      line-height: 1.7;
+      font-size: 15px;
+      word-break: break-word;
+      animation: bubbleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .bubble.ai {
+      align-self: flex-start;
+      background: var(--orange);
+      color: #fff;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--user-bubble-bg);
+      color: var(--text);
+      font-size: 14px;
+      border-radius: var(--radius-bubble-user);
+    }
+    @keyframes bubbleIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ==========================================
+       选项按钮
+       ========================================== */
+    .options-area {
+      align-self: flex-start;
+      width: 84%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: bubbleIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .option-btn {
+      display: block;
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid #FFD4BF;
+      border-radius: 14px;
+      background: var(--white);
+      color: var(--orange);
+      font-size: 15px;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.18s;
+      box-shadow: var(--shadow-sm);
+    }
+    .option-btn:hover {
+      border-color: var(--orange);
+      background: #FFF6F0;
+      transform: translateX(4px);
+    }
+    .option-btn:active {
+      background: var(--orange);
+      color: #fff;
+      border-color: var(--orange);
+      transform: scale(0.97);
+    }
+    .option-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      border-color: #DDD;
+    }
+
+    /* ==========================================
+       加载动画
+       ========================================== */
+    .loading-bubble {
+      padding: 16px 20px;
+    }
+    .loading-dots {
+      display: flex;
+      gap: 7px;
+    }
+    .loading-dots span {
+      width: 9px; height: 9px;
+      background: rgba(255,255,255,0.85);
+      border-radius: 50%;
+      animation: dotBounce 1.2s infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30%            { transform: translateY(-10px); }
+    }
+
+    /* ==========================================
+       进度条
+       ========================================== */
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px 12px;
+      background: var(--white);
+      border-top: 1px solid #F0F0F0;
+    }
+    .progress-track {
+      flex: 1; height: 6px;
+      background: #E8E8E8;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FF6B35 0%, #FF8F5E 100%);
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .progress-text {
+      font-size: 13px; color: var(--text-light); white-space: nowrap;
+      font-weight: 500;
+    }
+
+    /* ==========================================
+       推荐卡片
+       ========================================== */
+    .rec-card {
+      align-self: center;
+      width: 92%;
+      background: var(--white);
+      border-radius: 22px;
+      padding: 28px 22px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      animation: cardPop 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes cardPop {
+      from { opacity: 0; transform: scale(0.8) translateY(30px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .rec-card .rec-emoji {
+      font-size: 60px;
+      margin-bottom: 12px;
+      animation: logoBounce 1.5s ease-in-out infinite;
+      animation-delay: 0.5s;
+    }
+    .rec-card .rec-title {
+      font-weight: 700;
+      font-size: 19px;
+      color: var(--orange);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .rec-card .rec-reason {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 6px;
+      line-height: 1.7;
+    }
+    .rec-card .rec-fun {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 22px;
+      font-style: italic;
+    }
+    .rec-card .retry-btn {
+      padding: 11px 36px;
+      border: none;
+      border-radius: 26px;
+      background: var(--green);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 14px rgba(38,166,154,0.3);
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .rec-card .retry-btn:hover  { transform: scale(1.06); box-shadow: 0 6px 20px rgba(38,166,154,0.45); }
+    .rec-card .retry-btn:active { transform: scale(0.95); }
+
+    /* 撒花效果 */
+    .confetti {
+      position: fixed;
+      font-size: 24px;
+      pointer-events: none;
+      z-index: 100;
+      animation: confettiFall 1.5s ease-out forwards;
+    }
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(-40px) rotate(0deg) scale(1); }
+      100% { opacity: 0; transform: translateY(100vh) rotate(720deg) scale(0.3); }
+    }
+
+    /* ==========================================
+       错误提示
+       ========================================== */
+    .error-toast {
+      background: #EF5350;
+      color: #fff;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 14px;
+      animation: toastIn 0.3s ease;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================
+       工具类
+       ========================================== */
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+
+    /* ==========================================
+       响应式 — 手机优化
+       ========================================== */
+    @media (max-width: 380px) {
+      .bubble { font-size: 14px; padding: 10px 14px; }
+      .option-btn { font-size: 14px; padding: 11px 14px; }
+      .welcome .logo { font-size: 60px; }
+      .welcome h2 { font-size: 22px; }
+    }
+
+    /* ==========================================
+       响应式 — 桌面小优化
+       ========================================== */
+    @media (min-width: 768px) {
+      .app { box-shadow: 0 0 40px rgba(0,0,0,0.06); }
+      .option-btn:hover { transform: translateX(6px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- ── 顶栏 ── -->
+    <header class="header">🍔 饭饭 · AI 外卖推荐</header>
+
+    <!-- ── 错误提示 ── -->
+    <div id="errorToast" class="error-toast hidden"></div>
+
+    <!-- ── 聊天区 ── -->
+    <div id="chatArea" class="chat-area">
+      <!-- 欢迎界面（JS 动态生成食物飘落） -->
+      <div id="welcome" class="welcome">
+        <div class="logo">🍽️</div>
+        <h2>今天吃什么？</h2>
+        <p>回答 10 道选择题<br>让 <b>饭饭</b> 帮你决定！</p>
+        <button class="start-btn" onclick="startChat()">🎯 开始推荐</button>
+      </div>
+    </div>
+
+    <!-- ── 进度条 ── -->
+    <div id="progressBar" class="progress-bar hidden">
+      <div class="progress-track">
+        <div id="progressFill" class="progress-fill" style="width:0%"></div>
+      </div>
+      <span id="progressText" class="progress-text">0/10</span>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    //  全局状态
+    // ==========================================
+    const chatArea     = document.getElementById('chatArea');
+    const welcome      = document.getElementById('welcome');
+    const progressBar  = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const errorToast   = document.getElementById('errorToast');
+
+    let messages   = [];           // 完整对话历史
+    let isWaiting  = false;        // 是否等待 AI 响应
+    let optionsEl  = null;         // 当前选项组 DOM
+    let typeTimer  = null;         // 打字机计时器
+
+    // ==========================================
+    //  食物飘落动画（欢迎页）
+    // ==========================================
+    const FOOD_EMOJIS = ['🍕','🍔','🌮','🍣','🍜','🍛','🥘','🍱','🧋','🍰','🍩','🍿','🥟','🍗','🌭','🥗'];
+
+    function spawnFood() {
+      if (!welcome.classList.contains('hidden')) {
+        const el = document.createElement('span');
+        el.className = 'food-float';
+        el.textContent = FOOD_EMOJIS[Math.floor(Math.random() * FOOD_EMOJIS.length)];
+        el.style.left = Math.random() * 90 + '%';
+        el.style.bottom = '-30px';
+        el.style.animationDuration = (3 + Math.random() * 4) + 's';
+        el.style.animationDelay = '0s';
+        welcome.appendChild(el);
+        // 动画结束后移除
+        setTimeout(() => el.remove(), 4500);
+      }
+    }
+
+    let foodInterval = setInterval(spawnFood, 600);
+    // 初始一波
+    for (let i = 0; i < 6; i++) setTimeout(() => spawnFood(), i * 200);
+
+    // ==========================================
+    //  开始对话
+    // ==========================================
+    async function startChat() {
+      clearInterval(foodInterval);
+      // 清理残留食物
+      welcome.querySelectorAll('.food-float').forEach((e) => e.remove());
+
+      welcome.classList.add('hidden');
+      progressBar.classList.remove('hidden');
+      await sendMessage('开始推荐');
+    }
+
+    // ==========================================
+    //  发送消息
+    // ==========================================
+    async function sendMessage(content) {
+      if (isWaiting) return;
+      isWaiting = true;
+      hideError();
+      disableOptions();
+
+      // 记录并显示用户消息
+      messages.push({ role: 'user', content });
+      addBubble('user', content);
+      updateProgress();
+
+      // 加载动画
+      const loadEl = addLoading();
+
+      try {
+        const resp = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages }),
+        });
+        if (!resp.ok) throw new Error(`服务器错误 (${resp.status})`);
+
+        const data = await resp.json();
+        if (!data.success) throw new Error(data.error || '未知错误');
+
+        // 记录 AI 回复
+        messages.push({ role: 'assistant', content: data.content });
+
+        // 移除加载
+        loadEl.remove();
+
+        // 显示结果
+        if (data.isComplete) {
+          // 推荐结果 — 打字机显示
+          await typeText(data.content, 'ai');
+          updateProgress(data.round);
+          setTimeout(() => showRecommendationCard(data.recommendation), 400);
+          setTimeout(() => spawnConfetti(), 300);
+        } else {
+          // 选择题 — 打字机显示问题 → 弹出选项
+          await typeText(data.content, 'ai');
+          updateProgress(data.round);
+          if (data.options?.length) {
+            setTimeout(() => showOptions(data.options), 200);
+          }
+        }
+      } catch (err) {
+        loadEl.remove();
+        showError(`😥 ${err.message}，请重试`);
+        messages.pop(); // 回滚
+      } finally {
+        isWaiting = false;
+      }
+    }
+
+    // ==========================================
+    //  打字机效果
+    // ==========================================
+    function typeText(text, role) {
+      return new Promise((resolve) => {
+        const div = document.createElement('div');
+        div.className = `bubble ${role}`;
+        div.textContent = '';
+        chatArea.appendChild(div);
+        scrollDown();
+
+        const chars = [...text];
+        let i = 0;
+
+        function tick() {
+          if (i >= chars.length) {
+            scrollDown();
+            return resolve();
+          }
+          // 每次输出 1~3 个字符（中文慢一点，英文快一点）
+          const chunk = chars[i];
+          div.textContent += chunk;
+          i++;
+          scrollDown();
+
+          // 标点符号稍作停顿
+          const delay = /[，。！？、\n]/.test(chunk) ? 60 : 25;
+          typeTimer = setTimeout(tick, delay);
+        }
+
+        tick();
+      });
+    }
+
+    // ==========================================
+    //  选项按钮
+    // ==========================================
+    function showOptions(opts) {
+      const container = document.createElement('div');
+      container.className = 'options-area';
+      opts.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => onOptionClick(opt));
+        container.appendChild(btn);
+      });
+      chatArea.appendChild(container);
+      optionsEl = container;
+      scrollDown();
+    }
+
+    function onOptionClick(optText) {
+      if (isWaiting) return;
+      disableOptions();
+      sendMessage(optText);
+    }
+
+    function disableOptions() {
+      if (optionsEl) {
+        optionsEl.querySelectorAll('button').forEach((b) => (b.disabled = true));
+        optionsEl = null;
+      }
+    }
+
+    // ==========================================
+    //  推荐卡片
+    // ==========================================
+    function showRecommendationCard(rec) {
+      if (!rec) return;
+      const card = document.createElement('div');
+      card.className = 'rec-card';
+      card.innerHTML = `
+        <div class="rec-emoji">🍕</div>
+        <div class="rec-title">${esc(rec.cuisine)} — ${esc(rec.dish)}</div>
+        <div class="rec-reason">💡 ${esc(rec.reason)}</div>
+        <div class="rec-fun">✨ ${esc(rec.funFact)}</div>
+        <button class="retry-btn" onclick="location.reload()">🔄 再来一次</button>
+      `;
+      chatArea.appendChild(card);
+      scrollDown();
+    }
+
+    // ==========================================
+    //  撒花（推荐完成时）
+    // ==========================================
+    function spawnConfetti() {
+      const emojis = ['🎉','🎊','✨','🌟','🍕','🍔','🌮','🍣','❤️','🔥'];
+      for (let i = 0; i < 18; i++) {
+        setTimeout(() => {
+          const el = document.createElement('span');
+          el.className = 'confetti';
+          el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+          el.style.left = Math.random() * 90 + '%';
+          el.style.top = '-30px';
+          el.style.animationDuration = (1.2 + Math.random() * 2) + 's';
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 3500);
+        }, i * 80);
+      }
+    }
+
+    // ==========================================
+    //  聊天气泡（纯文本，不打字）
+    // ==========================================
+    function addBubble(role, text) {
+      const div = document.createElement('div');
+      div.className = `bubble ${role}`;
+      div.textContent = text;
+      chatArea.appendChild(div);
+      scrollDown();
+      return div;
+    }
+
+    // ==========================================
+    //  加载动画
+    // ==========================================
+    function addLoading() {
+      const div = document.createElement('div');
+      div.className = 'bubble ai loading-bubble';
+      div.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+      chatArea.appendChild(div);
+      scrollDown();
+      return div;
+    }
+
+    // ==========================================
+    //  进度条
+    // ==========================================
+    function updateProgress(round) {
+      const r = round || messages.filter((m) => m.role === 'user').length;
+      const pct = Math.min((r / 10) * 100, 100);
+      progressFill.style.width = `${pct}%`;
+      progressText.textContent = `${Math.min(r, 10)}/10`;
+    }
+
+    // ==========================================
+    //  错误处理
+    // ==========================================
+    function showError(msg) {
+      errorToast.textContent = msg;
+      errorToast.classList.remove('hidden');
+    }
+    function hideError() {
+      errorToast.classList.add('hidden');
+    }
+
+    // ==========================================
+    //  工具函数
+    // ==========================================
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+    function scrollDown() {
+      requestAnimationFrame(() => {
+        chatArea.scrollTop = chatArea.scrollHeight;
+      });
+    }
+
+    // ==========================================
+    //  键盘支持（A/B/C/D 快捷键选选项）
+    // ==========================================
+    document.addEventListener('keydown', (e) => {
+      if (isWaiting || !optionsEl) return;
+      const key = e.key.toUpperCase();
+      if (['A','B','C','D'].includes(key)) {
+        const idx = key.charCodeAt(0) - 65; // A=0, B=1, ...
+        const btns = optionsEl.querySelectorAll('button');
+        if (btns[idx]) {
+          e.preventDefault();
+          btns[idx].click();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

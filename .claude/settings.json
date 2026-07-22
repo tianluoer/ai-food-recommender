@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "command": "bash -c 'TODAY=\"dev-logs/$(date +%Y-%m-%d).md\"; if [ ! -f \"$TODAY\" ]; then cat dev-logs/template.md | sed \"s/YYYY-MM-DD/$(date +%Y-%m-%d)/\" > \"$TODAY\"; echo \"📝 已创建今日开发日志: $TODAY\"; fi'"
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "command": "bash -c 'echo \"📋 今日开发日志位于 dev-logs/$(date +%Y-%m-%d).md，请确保已更新\"'"
+      }
+    ]
+  }
+}
