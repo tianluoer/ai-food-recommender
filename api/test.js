@@ -1,21 +1,13 @@
 /**
- * 测试端点 — 验证 Vercel Function 是否正常工作
+ * 极简测试端点
  */
-module.exports = async function handler(req, res) {
-  const CORS_HEADERS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).set(CORS_HEADERS).end();
-  }
-
-  return res.status(200).set(CORS_HEADERS).json({
+module.exports = async (req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.end(JSON.stringify({
     success: true,
-    message: 'Vercel Function works!',
     hasApiKey: !!process.env.DEEPSEEK_API_KEY,
-    nodeVersion: process.version,
-  });
+    time: new Date().toISOString(),
+  }));
 };
