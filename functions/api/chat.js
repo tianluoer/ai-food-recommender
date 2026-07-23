@@ -5,25 +5,30 @@
  */
 
 // ── System Prompt ──
-const SYSTEM_PROMPT = `你是一个幽默风趣的外卖推荐助手，名字叫"饭饭"🍔。
+const SYSTEM_PROMPT = `你是一个幽默风趣的外卖推荐助手，名字叫"饭饭"🍔。你帮用户决定今天点哪家外卖。
+
+## 🛵 重要：你在帮人点外卖
+- 推荐的都是外卖平台（美团/饿了么）上能点到的真实菜品
+- 预算按外卖实际价格来：10~60元是常态
+- 菜品要具体到能在外卖 App 搜到的名字，如"水煮牛肉""黄焖鸡米饭"
+- 不推荐堂食大菜、高级餐厅菜品
 
 ## ⚠️ 核心规则（必须严格遵守）
-- 你每次回复只做一件事：问一个选择题，并给出3~4个具体选项
-- 选项必须具体到食物/口味/菜系等，不能是"好的""换一个"这种应付选项
-- 选项之间互斥且有区分度
-- 绝对不能只问问题不给选项！下面是反面教材：
-  ❌ "你想吃什么肉？"（只有问题，没有选项）
-  ✅ "想吃什么肉？\nA. 牛肉🥩\nB. 猪肉🐷\nC. 鸡肉🐔\nD. 你推荐😋"
+- 每轮问一个选择题，给出 4~5 个具体选项
+- 选项必须具体到食物类型/口味/菜名，绝不能是"好的""换一个"
+- 选项要多变有区分度，让用户有真正的选择感
+- 绝对不能只问问题不给选项！
 
-## 回复格式（必须原样遵守，每次都要有选项）
+## 回复格式（必须原样遵守）
 [问题的文字描述]
 A. [具体选项A]
 B. [具体选项B]
 C. [具体选项C]
-D. [具体选项D]（可选）
+D. [具体选项D]
+E. [具体选项E]（可选）
 
-- 问题控制在40字以内，每个选项控制在8字以内
-- 语气轻松活泼，适当使用emoji（每行1-2个）
+- 问题40字以内，每个选项10字以内
+- 语气轻松活泼，适当使用 emoji
 - 用"你"称呼用户
 
 ## 性格
@@ -171,12 +176,11 @@ function parseMultipleChoice(text) {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    // 匹配各种选项格式：A. A) A、 A． 1. ① 等
-    const match = trimmed.match(/^([A-Da-d1-4])[.、．)\s]+(.+)/);
+    // 匹配 A-E 或 1-5 或 a-e 开头的选项行
+    const match = trimmed.match(/^([A-Ea-e1-5])[.、．)\s]+(.+)/);
     if (match) {
       options.push(`${match[1].toUpperCase()}. ${match[2].trim()}`);
-    } else if (trimmed.match(/^[①②③④]\s*(.+)/)) {
-      // 兼容①②③④格式
+    } else if (trimmed.match(/^[①②③④⑤]\s*(.+)/)) {
       options.push(trimmed);
     } else {
       if (!trimmed.startsWith('{') && !trimmed.startsWith('\`\`\`')) {
@@ -189,8 +193,8 @@ function parseMultipleChoice(text) {
   if (options.length === 0) {
     const nonEmpty = lines.filter(l => l.trim().length > 2 && !l.trim().startsWith('{'));
     if (nonEmpty.length >= 3) {
-      const labels = ['A', 'B', 'C', 'D'];
-      nonEmpty.slice(0, 4).forEach((l, i) => {
+      const labels = ['A', 'B', 'C', 'D', 'E'];
+      nonEmpty.slice(0, 5).forEach((l, i) => {
         options.push(`${labels[i]}. ${l.trim().slice(0, 20)}`);
       });
     }
@@ -245,19 +249,18 @@ function generateSmartFallback(question) {
     { keys: ['饮', '喝', '茶', '可乐', '水'], opts: ['可乐 🥤', '酸梅汤 🍹', '柠檬水 🍋', '白开水 💧'] },
     { keys: ['辣度', '辣', '麻'], opts: ['微辣 🌶️', '中辣 🌶️🌶️', '特辣 🔥🔥🔥', '不辣 ❌'] },
     { keys: ['温度', '热', '凉', '冷'], opts: ['热乎的 🔥', '常温的 👍', '冰凉的 🧊', '都可以 😋'] },
-    { keys: ['预算', '钱', '价格', '贵', '便宜'], opts: ['20元以内 💰', '20-35元 💰💰', '35元以上 💰💰💰', '不设限 😎'] },
+    { keys: ['预算', '钱', '价格', '贵', '便宜', '多少'], opts: ['15元以内 💰', '15-25元 💰💰', '25-40元 💰💰💰', '40-60元 🍽️', '不设限 😎'] },
     { keys: ['份量', '量', '大', '小', '吃'], opts: ['小份尝鲜 🧆', '中份刚好 🍽️', '大份过瘾 🍕', '都可以 👍'] },
     { keys: ['时间', '餐', '午', '晚', '夜宵'], opts: ['午餐 ☀️', '晚餐 🌙', '夜宵 🦉', '下午茶 🍰'] },
   ];
 
   for (const { keys, opts } of topicMap) {
     if (keys.some(k => q.includes(k))) {
-      return ['A', 'B', 'C', 'D'].slice(0, opts.length).map((l, i) => `${l}. ${opts[i]}`);
+      return ['A', 'B', 'C', 'D', 'E'].slice(0, opts.length).map((l, i) => `${l}. ${opts[i]}`);
     }
   }
 
-  // 全不匹配 → 通用兜底
-  return ['A. 👍 很合适', 'B. 🔄 换一个', 'C. 🎲 你决定', 'D. 👉 继续下一题'];
+  return ['A. 👍 就这个', 'B. 🔄 换一批', 'C. 🎲 你拍板', 'D. 👉 下一题', 'E. 🍜 随机推荐'];
 }
 
 // ── 解析推荐 JSON ──
