@@ -96,12 +96,27 @@ export async function onRequest({ request, env }) {
     }
 
     // 选择题模式
-    const { question, options } = parseMultipleChoice(aiText);
+    let { question, options } = parseMultipleChoice(aiText);
+
+    // 如果解析不到足够选项，追加 API 调用专门生成选项
+    if (options.length < 2) {
+      try {
+        const fixedOptions = await fixOptions(env, question);
+        if (fixedOptions.length >= 2) {
+          options = fixedOptions;
+        }
+      } catch {}
+    }
+
+    // 最终兜底：基于话题智能生成
+    if (options.length < 2) {
+      options = generateSmartFallback(question);
+    }
 
     return json(200, {
       success: true,
       content: question,
-      options: options.length >= 2 ? options : ['A. 好的 👍', 'B. 换一个 🤔', 'C. 你推荐 😋'],
+      options,
       round: userMsgCount,
       isComplete: false,
     });
@@ -185,6 +200,64 @@ function parseMultipleChoice(text) {
     question: questionLines.join('\n') || '来选一个吧~ 😋',
     options,
   };
+}
+
+// ── 二次调用修复选项 ──
+async function fixOptions(env, question) {
+  const apiKey = env.DEEPSEEK_API_KEY;
+  if (!apiKey) return [];
+
+  const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [{
+        role: 'user',
+        content: `你是一个选项生成器。为这个选择题生成3-4个具体选项：\n\n"${question}"\n\n只输出选项，一行一个，格式：A. 选项内容\n不要加任何解释。每个选项8字以内。`,
+      }],
+      temperature: 0.5,
+      max_tokens: 120,
+    }),
+  });
+
+  if (!resp.ok) return [];
+  const data = await resp.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  const { options } = parseMultipleChoice(text);
+  return options;
+}
+
+// ── 智能兜底（不再出现"好的/换一个"） ──
+function generateSmartFallback(question) {
+  // 从问题中提取关键词来判断话题
+  const q = question.toLowerCase();
+  const topicMap = [
+    { keys: ['口味', '甜', '辣', '酸', '咸', '清淡'], opts: ['辣的过瘾 🌶️', '清淡养生 🥬', '酸甜开胃 🍋', '咸香浓郁 🧂'] },
+    { keys: ['菜系', '中餐', '西餐', '日料', '韩料'], opts: ['川菜麻辣 🌶️', '粤菜鲜美 🥢', '日料精致 🍣', '你推荐 😋'] },
+    { keys: ['肉', '荤', '牛肉', '猪肉', '鸡肉', '海鲜', '鱼'], opts: ['牛肉 🥩', '猪肉 🐷', '鸡肉 🐔', '海鲜 🦐'] },
+    { keys: ['主食', '米', '面', '馒头', '饭'], opts: ['米饭 🍚', '面条 🍜', '馒头 🥟', '都可以 😋'] },
+    { keys: ['菜', '蔬菜', '素', '配'], opts: ['炒青菜 🥬', '凉拌黄瓜 🥒', '酸辣土豆丝 🥔', '不用搭配 👍'] },
+    { keys: ['汤', '粥'], opts: ['番茄蛋汤 🍅', '紫菜汤 🥣', '酸辣汤 🌶️', '不用汤 👍'] },
+    { keys: ['饮', '喝', '茶', '可乐', '水'], opts: ['可乐 🥤', '酸梅汤 🍹', '柠檬水 🍋', '白开水 💧'] },
+    { keys: ['辣度', '辣', '麻'], opts: ['微辣 🌶️', '中辣 🌶️🌶️', '特辣 🔥🔥🔥', '不辣 ❌'] },
+    { keys: ['温度', '热', '凉', '冷'], opts: ['热乎的 🔥', '常温的 👍', '冰凉的 🧊', '都可以 😋'] },
+    { keys: ['预算', '钱', '价格', '贵', '便宜'], opts: ['20元以内 💰', '20-35元 💰💰', '35元以上 💰💰💰', '不设限 😎'] },
+    { keys: ['份量', '量', '大', '小', '吃'], opts: ['小份尝鲜 🧆', '中份刚好 🍽️', '大份过瘾 🍕', '都可以 👍'] },
+    { keys: ['时间', '餐', '午', '晚', '夜宵'], opts: ['午餐 ☀️', '晚餐 🌙', '夜宵 🦉', '下午茶 🍰'] },
+  ];
+
+  for (const { keys, opts } of topicMap) {
+    if (keys.some(k => q.includes(k))) {
+      return ['A', 'B', 'C', 'D'].slice(0, opts.length).map((l, i) => `${l}. ${opts[i]}`);
+    }
+  }
+
+  // 全不匹配 → 通用兜底
+  return ['A. 👍 很合适', 'B. 🔄 换一个', 'C. 🎲 你决定', 'D. 👉 继续下一题'];
 }
 
 // ── 解析推荐 JSON ──
