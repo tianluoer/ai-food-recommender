@@ -131,9 +131,15 @@ export async function onRequest({ request, env }) {
   }
 }
 
-// ── JSON 响应辅助 ──
+// ── JSON 响应辅助（禁用缓存） ──
 function json(status, body) {
-  return new Response(JSON.stringify(body), { status, headers: CORS });
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...CORS,
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+    },
+  });
 }
 
 // ── 调用 DeepSeek API ──
@@ -220,11 +226,14 @@ async function fixOptions(env, question) {
     body: JSON.stringify({
       model: 'deepseek-chat',
       messages: [{
+        role: 'system',
+        content: '你是外卖选项生成器。为外卖选择题生成具体选项，必须与食物相关。绝不输出"好的""换一个""你决定"这类兜底文字。',
+      }, {
         role: 'user',
-        content: `你是一个选项生成器。为这个选择题生成3-4个具体选项：\n\n"${question}"\n\n只输出选项，一行一个，格式：A. 选项内容\n不要加任何解释。每个选项8字以内。`,
+        content: `为这道外卖选择题生成4-5个具体选项（外卖平台能点到的真实菜品/主食/口味）：\n\n"${question}"\n\n严格按以下格式输出，每行一个：\nA. 具体选项\nB. 具体选项\n...\n每个选项不超过10字。`,
       }],
       temperature: 0.5,
-      max_tokens: 120,
+      max_tokens: 150,
     }),
   });
 
