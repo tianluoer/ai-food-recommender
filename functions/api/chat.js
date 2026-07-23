@@ -226,17 +226,23 @@ function isMismatched(question, options) {
   const q = question;
   const allOpts = options.join(' ');
 
-  // 问预算 → 选项应含价格关键词
-  if (/预算|价格|多少钱|多少预算|花多少/.test(q) && !/[0-9]+元|块|¥/.test(allOpts)) {
-    return true;
+  // 问预算 → 选项应是纯价格范围，不能是菜品+价格（如"15元蛋炒饭"算菜品）
+  if (/预算|价格|多少钱|多少预算|花多少/.test(q)) {
+    const dishWords = /饭$|面$|鸡$|肉$|鱼$|虾$|锅$|菜$|蛋$|煲$|粉$/;
+    if (options.some(o => dishWords.test(o))) return true;
   }
-  // 问饮品/喝 → 选项不应是饭菜
-  if (/饮品|喝|饮料|可乐|茶|汤/.test(q) && /饭|面|肉|鸡|鱼|虾|锅|菜/.test(allOpts) && !/水|汁|乐|茶|汤/.test(allOpts)) {
-    return true;
+  // 问饮品/喝/饮料 → 选项不应全是饭菜名
+  if (/饮品|喝|饮料|可乐/.test(q)) {
+    const drinkWords = /水|汁|乐|茶|汤|奶|饮/;
+    if (!options.every(o => drinkWords.test(o))) {
+      const dishWords = /饭$|面$|肉$|鸡$|鱼$|虾$|锅$|菜$|蛋$|煲$/;
+      if (options.some(o => dishWords.test(o))) return true;
+    }
   }
-  // 问主食/饭/面 → 选项应有主食关键词
-  if (/主食|饭|面|馒头|饼/.test(q) && !/饭|面|馒头|饼|粉/.test(allOpts)) {
-    return true;
+  // 问主食/饭/面/米 → 选项应包含主食类词
+  if (/主食|配饭|搭饭|米饭/.test(q)) {
+    const staple = /饭|面|馒头|饼|粉|米/;
+    if (!options.some(o => staple.test(o))) return true;
   }
   return false;
 }
