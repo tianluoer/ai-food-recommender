@@ -15,31 +15,23 @@
       background: var(--bg); color: var(--text); min-height: 100dvh;
       -webkit-tap-highlight-color: transparent; overflow-x: hidden;
     }
-
-    /* ── 页面容器 ── */
     .app {
       max-width: 500px; margin: 0 auto; min-height: 100dvh;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 24px 20px;
     }
-
-    /* ── 页面卡片 ── */
     .page {
       width: 100%; display: flex; flex-direction: column; align-items: center;
-      animation: slideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-      text-align: center;
+      animation: slideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1); text-align: center;
     }
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(24px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── 欢迎页 ── */
+    /* 欢迎页 */
     .welcome-emoji { font-size: 72px; margin-bottom: 16px; animation: bounce 2s ease-in-out infinite; }
-    @keyframes bounce {
-      0%,100% { transform: translateY(0); }
-      50%     { transform: translateY(-12px); }
-    }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
     .welcome h2 { font-size: 26px; color: var(--orange); margin-bottom: 8px; }
     .welcome p  { font-size: 15px; color: var(--text-light); margin-bottom: 32px; line-height: 1.7; }
     .btn-start {
@@ -48,108 +40,100 @@
       color: #fff; font-size: 19px; font-weight: 700; cursor: pointer;
       box-shadow: 0 6px 20px rgba(255,107,53,0.35); transition: transform .15s;
     }
-    .btn-start:hover  { transform: scale(1.05); }
-    .btn-start:active { transform: scale(0.95); }
+    .btn-start:hover{transform:scale(1.05)} .btn-start:active{transform:scale(0.95)}
 
-    /* ── 进度 ── */
+    /* 进度 */
     .progress-wrap {
       width: 100%; display: flex; align-items: center; gap: 10px; margin-bottom: 32px;
     }
-    .progress-track {
-      flex: 1; height: 6px; background: #E0E0E0; border-radius: 3px; overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%; background: linear-gradient(90deg, #FF6B35, #FF8F5E);
-      border-radius: 3px; transition: width 0.4s ease;
-    }
+    .progress-track { flex: 1; height: 6px; background: #E0E0E0; border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #FF6B35, #FF8F5E); border-radius: 3px; transition: width 0.4s ease; }
     .progress-num { font-size: 13px; color: var(--text-light); white-space: nowrap; }
 
-    /* ── 问题 ── */
+    /* 问题 */
     .q-emoji { font-size: 52px; margin-bottom: 12px; }
-    .q-text  {
-      font-size: 20px; font-weight: 600; color: var(--text);
-      margin-bottom: 28px; line-height: 1.5; max-width: 360px; min-height: 32px;
-    }
-    .q-text .cursor {
-      display: inline-block; width: 2px; height: 1em; background: var(--orange);
-      margin-left: 2px; animation: blink 0.8s step-end infinite; vertical-align: text-bottom;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-    .q-hint  { font-size: 13px; color: var(--text-light); margin-bottom: 6px; }
+    .q-text { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 28px; line-height: 1.5; max-width: 360px; min-height: 32px; }
 
-    /* ── 选项 ── */
+    /* 选项 */
     .options { width: 100%; display: flex; flex-direction: column; gap: 10px; }
-    .options.animate-in .opt-btn {
-      animation: optSlideUp 0.35s ease backwards;
-    }
-    .options.animate-in .opt-btn:nth-child(1) { animation-delay: 0s; }
-    .options.animate-in .opt-btn:nth-child(2) { animation-delay: 0.06s; }
-    .options.animate-in .opt-btn:nth-child(3) { animation-delay: 0.12s; }
-    .options.animate-in .opt-btn:nth-child(4) { animation-delay: 0.18s; }
-    .options.animate-in .opt-btn:nth-child(5) { animation-delay: 0.24s; }
-    @keyframes optSlideUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .options.animate-in .opt-btn { animation: optSlideUp 0.35s ease backwards; }
+    .options.animate-in .opt-btn:nth-child(1){animation-delay:0s}
+    .options.animate-in .opt-btn:nth-child(2){animation-delay:.06s}
+    .options.animate-in .opt-btn:nth-child(3){animation-delay:.12s}
+    .options.animate-in .opt-btn:nth-child(4){animation-delay:.18s}
+    .options.animate-in .opt-btn:nth-child(5){animation-delay:.24s}
+    @keyframes optSlideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
     .opt-btn {
       width: 100%; padding: 16px 20px; border: 2px solid #FFD4BF; border-radius: 16px;
       background: var(--white); color: var(--text); font-size: 16px; text-align: left;
       cursor: pointer; font-family: inherit; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       transition: all 0.18s; display: flex; align-items: center; gap: 10px;
     }
-    .opt-btn:hover  { border-color: var(--orange); background: #FFF6F0; transform: translateX(4px); }
+    .opt-btn:hover { border-color: var(--orange); background: #FFF6F0; transform: translateX(4px); }
     .opt-btn:active { background: var(--orange); color: #fff; border-color: var(--orange); transform: scale(0.97); }
-    .opt-btn .opt-label {
+    .opt-label {
       width: 32px; height: 32px; border-radius: 50%; background: var(--orange);
       color: #fff; display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 14px; flex-shrink: 0;
     }
     .opt-btn:active .opt-label { background: #fff; color: var(--orange); }
 
-    /* ── 加载 ── */
+    /* 辅助按钮栏 */
+    .sub-bar { width: 100%; display: flex; gap: 8px; margin-top: 14px; }
+    .sub-btn {
+      flex: 1; min-width: 72px; padding: 11px 8px; border: 2px dashed #CCC; border-radius: 14px;
+      background: transparent; color: #999; font-size: 13px; text-align: center;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .sub-btn:hover { background: #fafafa; }
+    .sub-btn.refresh { border-color: #FFB088; color: #FF6B35; }
+    .sub-btn.refresh:hover { background: #FFF6F0; }
+
+    /* 其他输入 */
+    .other-input {
+      width: 100%; padding: 12px 16px; border: 2px solid #FFD4BF; border-radius: 14px;
+      font-size: 15px; outline: none; font-family: inherit;
+    }
+    .other-input:focus { border-color: #FF6B35; }
+    .other-row { display: flex; gap: 8px; margin-top: 8px; }
+    .other-row button { flex: 1; padding: 10px; border-radius: 14px; font-size: 14px; cursor: pointer; font-family: inherit; }
+    .btn-cancel { border: 2px solid #CCC; background: transparent; color: #666; }
+    .btn-confirm { border: none; background: #FF6B35; color: #fff; }
+
+    /* 加载 */
     .loading-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .loading-dots { display: flex; gap: 8px; }
-    .loading-dots span {
-      width: 10px; height: 10px; background: var(--orange); border-radius: 50%;
-      animation: dotBounce 1.2s infinite;
-    }
-    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes dotBounce {
-      0%,60%,100% { transform: translateY(0); }
-      30%         { transform: translateY(-12px); }
-    }
+    .loading-dots span { width: 10px; height: 10px; background: var(--orange); border-radius: 50%; animation: dotBounce 1.2s infinite; }
+    .loading-dots span:nth-child(2){animation-delay:.2s}
+    .loading-dots span:nth-child(3){animation-delay:.4s}
+    @keyframes dotBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-12px)} }
     .loading-text { font-size: 15px; color: var(--text-light); }
 
-    /* ── 推荐页 ── */
+    /* 推荐 */
     .rec-card {
       width: 100%; background: var(--white); border-radius: 24px;
-      padding: 32px 24px; text-align: center;
-      box-shadow: 0 6px 30px rgba(0,0,0,0.08);
+      padding: 32px 24px; text-align: center; box-shadow: 0 6px 30px rgba(0,0,0,0.08);
       animation: slideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .rec-card .rec-emoji { font-size: 64px; margin-bottom: 16px; animation: bounce 1.5s ease-in-out infinite; }
-    .rec-card .rec-dish { font-size: 22px; font-weight: 700; color: var(--orange); margin-bottom: 4px; }
-    .rec-card .rec-cuisine { font-size: 15px; color: var(--text-light); margin-bottom: 16px; }
-    .rec-card .rec-reason { font-size: 15px; color: #666; line-height: 1.6; margin-bottom: 8px; }
-    .rec-card .rec-fun { font-size: 14px; color: var(--text-light); font-style: italic; margin-bottom: 24px; }
+    .rec-emoji { font-size: 64px; margin-bottom: 16px; animation: bounce 1.5s ease-in-out infinite; }
+    .rec-dish { font-size: 22px; font-weight: 700; color: var(--orange); margin-bottom: 4px; }
+    .rec-cuisine { font-size: 15px; color: var(--text-light); margin-bottom: 16px; }
+    .rec-reason { font-size: 15px; color: #666; line-height: 1.6; margin-bottom: 8px; }
+    .rec-fun { font-size: 14px; color: var(--text-light); font-style: italic; margin-bottom: 24px; }
     .btn-retry {
       padding: 14px 40px; border: none; border-radius: 28px;
       background: var(--green); color: #fff; font-size: 16px; font-weight: 600;
-      cursor: pointer; box-shadow: 0 4px 14px rgba(38,166,154,0.3);
-      transition: transform .15s;
+      cursor: pointer; box-shadow: 0 4px 14px rgba(38,166,154,0.3); transition: transform .15s;
     }
-    .btn-retry:hover  { transform: scale(1.05); }
-    .btn-retry:active { transform: scale(0.95); }
+    .btn-retry:hover{transform:scale(1.05)} .btn-retry:active{transform:scale(0.95)}
 
-    /* ── 错误 ── */
+    /* 错误 */
     .error-bar {
       width: 100%; background: #EF5350; color: #fff; padding: 12px; text-align: center;
       font-size: 14px; border-radius: 12px; margin-bottom: 16px; animation: slideIn .3s ease;
     }
-
     .hidden { display: none !important; }
-
     @media (max-width: 380px) {
       .app { padding: 20px 14px; }
       .q-text { font-size: 18px; }
@@ -158,20 +142,21 @@
   </style>
 </head>
 <body>
-  <div class="app" id="app">
-    <!-- JS 动态渲染 -->
-  </div>
+  <div class="app" id="app"></div>
 
   <script>
     const app = document.getElementById('app');
     let messages = [];
     let isLoading = false;
 
-    // ── 渲染函数 ──
-    function render(el) {
-      app.innerHTML = '';
-      app.appendChild(el);
+    function render(el) { app.innerHTML = ''; app.appendChild(el); }
+    function el(tag, attrs = {}) {
+      const e = document.createElement(tag);
+      Object.entries(attrs).forEach(([k, v]) => { if (k === 'class') e.className = v; else e[k] = v; });
+      return e;
     }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+    function pickEmoji(n) { return ['🤔','🌶️','🥘','🥩','🥬','🍚','🔥','💰','👤','🧋'][Math.min(n, 10)] || '🤔'; }
 
     // ── 欢迎页 ──
     function showWelcome() {
@@ -186,12 +171,9 @@
       render(page);
     }
 
-    // ── 开始 ──
-    async function startChat() {
-      await send('开始推荐');
-    }
+    async function startChat() { await send('开始推荐'); }
 
-    // ── 发送 + 渲染 ──
+    // ── 发送消息 ──
     async function send(content) {
       if (isLoading) return;
       isLoading = true;
@@ -223,7 +205,7 @@
       }
     }
 
-    // ── 问题页（含打字机效果） ──
+    // ── 问题页（打字机效果） ──
     function showQuestion(question, options, round) {
       const page = el('div', { class: 'page' });
 
@@ -240,44 +222,47 @@
       qEmoji.textContent = pickEmoji(round);
       page.appendChild(qEmoji);
 
-      // 问题文字（先空着，打字机填充）
+      // 问题文字（打字机）
       const qt = el('div', { class: 'q-text' });
       page.appendChild(qt);
 
-      // 选项容器
+      // 选项（先隐藏）
       const optsWrap = el('div', { class: 'options' });
       optsWrap.style.opacity = '0';
       options.forEach((opt, i) => {
         const btn = el('button', { class: 'opt-btn' });
-        const label = String.fromCharCode(65 + i);
-        btn.innerHTML = `<span class="opt-label">${label}</span> ${esc(opt.replace(/^[A-E][.、．) ]\s*/, ''))}`;
+        btn.innerHTML = `<span class="opt-label">${String.fromCharCode(65+i)}</span> ${esc(opt.replace(/^[A-E][.、．) ]\s*/, ''))}`;
         btn.addEventListener('click', () => send(opt));
         optsWrap.appendChild(btn);
       });
-
-      // 「换一批」按钮
-      const refreshBtn = el('button', { class: 'opt-btn' });
-      refreshBtn.style.cssText = 'margin-top:4px;border:2px dashed #FFB088;color:#FF6B35;justify-content:center;text-align:center';
-      refreshBtn.innerHTML = '🔄 都不想，换一批';
-      refreshBtn.addEventListener('click', () => send('换一批，给不同的选项'));
-      optsWrap.appendChild(refreshBtn);
-
       page.appendChild(optsWrap);
+
+      // 底部三按钮：换一批 / 不想要 / 其他
+      const bar = el('div', { class: 'sub-bar' });
+      bar.id = 'subBar';
+
+      const makeBtn = (html, cls, fn) => {
+        const b = el('button', { class: 'sub-btn ' + cls });
+        b.innerHTML = html;
+        b.addEventListener('click', fn);
+        return b;
+      };
+      bar.appendChild(makeBtn('🔄 换一批', 'refresh', () => send('换一批')));
+      bar.appendChild(makeBtn('🚫 不想要', '', () => send('不想要这个')));
+      bar.appendChild(makeBtn('💬 其他', '', () => showOtherInput()));
+      page.appendChild(bar);
 
       render(page);
 
-      // ── 打字机逐字显示 ──
+      // 打字机
       const chars = [...question];
       let i = 0;
       function tick() {
         if (i < chars.length) {
           qt.textContent += chars[i];
           i++;
-          const delay = /[，。！？、\n]/.test(chars[i - 1]) ? 80 : 30;
-          setTimeout(tick, delay);
+          setTimeout(tick, /[，。！？、\n]/.test(chars[i-1]) ? 80 : 30);
         } else {
-          // 打完 → 移除光标 → 显示选项
-          qt.classList.remove('typing');
           optsWrap.style.transition = 'opacity 0.3s';
           optsWrap.style.opacity = '1';
           optsWrap.classList.add('animate-in');
@@ -286,7 +271,30 @@
       tick();
     }
 
-    // ── 加载页 ──
+    // ── 「其他」输入 ──
+    function showOtherInput() {
+      const bar = document.getElementById('subBar');
+      if (!bar) return;
+      bar.innerHTML = '';
+
+      const input = el('input', { class: 'other-input', type: 'text', placeholder: '输入你想吃的...', maxLength: '100' });
+      bar.appendChild(input);
+
+      const row = el('div', { class: 'other-row' });
+      const cancel = el('button', { class: 'btn-cancel' });
+      cancel.textContent = '取消';
+      cancel.addEventListener('click', () => send('跳过'));
+      const confirm = el('button', { class: 'btn-confirm' });
+      confirm.textContent = '确定';
+      confirm.addEventListener('click', () => { const v = input.value.trim(); if (v) send(v); });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && input.value.trim()) send(input.value.trim()); });
+      row.appendChild(cancel);
+      row.appendChild(confirm);
+      bar.appendChild(row);
+      setTimeout(() => input.focus(), 100);
+    }
+
+    // ── 加载 ──
     function showLoading() {
       const page = el('div', { class: 'page loading-wrap' });
       page.innerHTML = `
@@ -296,7 +304,7 @@
       render(page);
     }
 
-    // ── 推荐页 ──
+    // ── 推荐 ──
     function showRecommendation(rec, round) {
       const page = el('div', { class: 'page' });
       const card = el('div', { class: 'rec-card' });
@@ -313,7 +321,7 @@
       render(page);
     }
 
-    // ── 错误页 ──
+    // ── 错误 ──
     function showError(msg) {
       messages.pop();
       const page = el('div', { class: 'page' });
@@ -327,16 +335,6 @@
       render(page);
     }
 
-    // ── 工具 ──
-    function el(tag, attrs = {}) {
-      const e = document.createElement(tag);
-      Object.entries(attrs).forEach(([k, v]) => { if (k === 'class') e.className = v; else e[k] = v; });
-      return e;
-    }
-    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-    function pickEmoji(n) { return ['🤔','🌶️','🥘','🥩','🥬','🍚','🔥','💰','👤','🧋'][Math.min(n, 10)] || '🤔'; }
-
-    // ── 启动 ──
     showWelcome();
   </script>
 </body>
