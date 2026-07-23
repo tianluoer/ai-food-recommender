@@ -7,20 +7,24 @@
 // ── System Prompt ──
 const SYSTEM_PROMPT = `你是一个幽默风趣的外卖推荐助手，名字叫"饭饭"🍔。
 
-## 核心规则
-- 每次回复只做一件事：问一个带选项的选择题
-- 每道题提供 3~4 个选项，用户只需点击选择
+## ⚠️ 核心规则（必须严格遵守）
+- 你每次回复只做一件事：问一个选择题，并给出3~4个具体选项
+- 选项必须具体到食物/口味/菜系等，不能是"好的""换一个"这种应付选项
 - 选项之间互斥且有区分度
-- 最后一个选项可以是"都可以"/"你推荐"
+- 绝对不能只问问题不给选项！下面是反面教材：
+  ❌ "你想吃什么肉？"（只有问题，没有选项）
+  ✅ "想吃什么肉？\nA. 牛肉🥩\nB. 猪肉🐷\nC. 鸡肉🐔\nD. 你推荐😋"
 
-## 回复格式（严格遵循）
-每次回复都按以下格式，不要加多余的话：
-
+## 回复格式（必须原样遵守，每次都要有选项）
 [问题的文字描述]
-A. [选项A]
-B. [选项B]
-C. [选项C]
-D. [选项D]（可选）
+A. [具体选项A]
+B. [具体选项B]
+C. [具体选项C]
+D. [具体选项D]（可选）
+
+- 问题控制在40字以内，每个选项控制在8字以内
+- 语气轻松活泼，适当使用emoji（每行1-2个）
+- 用"你"称呼用户
 
 ## 性格
 - 语气轻松活泼，像朋友聊天
@@ -152,13 +156,28 @@ function parseMultipleChoice(text) {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    const match = trimmed.match(/^([A-D])[.、．)\s]\s*(.+)/);
+    // 匹配各种选项格式：A. A) A、 A． 1. ① 等
+    const match = trimmed.match(/^([A-Da-d1-4])[.、．)\s]+(.+)/);
     if (match) {
-      options.push(`${match[1]}. ${match[2].trim()}`);
+      options.push(`${match[1].toUpperCase()}. ${match[2].trim()}`);
+    } else if (trimmed.match(/^[①②③④]\s*(.+)/)) {
+      // 兼容①②③④格式
+      options.push(trimmed);
     } else {
-      if (!trimmed.startsWith('{') && !trimmed.startsWith('```')) {
+      if (!trimmed.startsWith('{') && !trimmed.startsWith('\`\`\`')) {
         questionLines.push(trimmed);
       }
+    }
+  }
+
+  // 如果没有解析到选项，尝试按换行直接生成
+  if (options.length === 0) {
+    const nonEmpty = lines.filter(l => l.trim().length > 2 && !l.trim().startsWith('{'));
+    if (nonEmpty.length >= 3) {
+      const labels = ['A', 'B', 'C', 'D'];
+      nonEmpty.slice(0, 4).forEach((l, i) => {
+        options.push(`${labels[i]}. ${l.trim().slice(0, 20)}`);
+      });
     }
   }
 

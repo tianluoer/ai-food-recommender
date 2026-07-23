@@ -1,0 +1,13 @@
+{
+  "routes": [
+    {
+      "routePath": "/api/chat",
+      "mountPath": "/api",
+      "method": "",
+      "module": [
+        "api/chat.js:onRequest"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}
