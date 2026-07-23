@@ -7,11 +7,12 @@
 
 const OpenAI = require('openai');
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+// 设置 CORS 响应头（用 setHeader 而非 .set()，兼容 Vercel 运行时）
+function setCORS(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
 
 // ── System Prompt：选择题模式 ──
 const SYSTEM_PROMPT = `你是一个幽默风趣的外卖推荐助手，名字叫"饭饭"🍔。
@@ -54,31 +55,36 @@ JSON 必须使用英文 key：cuisine(菜系), dish(具体菜品), reason(推荐
 // 第10轮时追加的提示
 const FINAL_HINT = `\n\n⚠️ 你已经收集了足够多的偏好信息。现在不要再用选择题格式。直接给出推荐，并在回复末尾附上指定格式的 JSON（英文 key）。`;
 
+// ── 响应辅助：设置 CORS 并返回 JSON ──
+function reply(res, status, body) {
+  setCORS(res);
+  return res.status(status).json(body);
+}
+
 // ── 导出 handler ──
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
-    return res.status(200).set(CORS_HEADERS).end();
+    setCORS(res);
+    return res.status(200).end();
   }
   if (req.method !== 'POST') {
-    return res.status(405).set(CORS_HEADERS).json({ success: false, error: '仅支持 POST' });
+    return reply(res, 405, { success: false, error: '仅支持 POST' });
   }
 
   try {
     const { messages } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).set(CORS_HEADERS).json({ success: false, error: '请提供有效的 messages' });
+      return reply(res, 400, { success: false, error: '请提供有效的 messages' });
     }
 
     const userMsgCount = messages.filter((m) => m.role === 'user').length;
     const isFinalRound = userMsgCount >= 10;
 
-    // 构建 System Prompt
     const systemContent = isFinalRound
       ? SYSTEM_PROMPT + FINAL_HINT
       : SYSTEM_PROMPT;
 
-    // 调用 DeepSeek
     const aiText = await callDeepSeek(systemContent, messages);
 
     // ── 判断返回类型 ──
@@ -86,7 +92,7 @@ module.exports = async function handler(req, res) {
 
     if (isFinalRound || recommendation) {
       const rec = recommendation || fallbackRecommendation(aiText);
-      return res.status(200).set(CORS_HEADERS).json({
+      return reply(res, 200, {
         success: true,
         content: formatRecommendText(rec),
         round: userMsgCount,
@@ -95,10 +101,10 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // 选择题模式：解析问题和选项
+    // 选择题模式
     const { question, options } = parseMultipleChoice(aiText);
 
-    return res.status(200).set(CORS_HEADERS).json({
+    return reply(res, 200, {
       success: true,
       content: question,
       options: options.length >= 2 ? options : ['A. 好的 👍', 'B. 换一个 🤔', 'C. 你推荐 😋'],
@@ -108,12 +114,12 @@ module.exports = async function handler(req, res) {
   } catch (error) {
     console.error('API Error:', error.message);
     if (error.status === 401 || error.message?.includes('401')) {
-      return res.status(500).set(CORS_HEADERS).json({ success: false, error: 'AI 服务认证失败' });
+      return reply(res, 500, { success: false, error: 'AI 服务认证失败' });
     }
     if (error.status === 429 || error.message?.includes('429')) {
-      return res.status(500).set(CORS_HEADERS).json({ success: false, error: 'AI 服务繁忙，请稍后重试' });
+      return reply(res, 500, { success: false, error: 'AI 服务繁忙，请稍后重试' });
     }
-    return res.status(500).set(CORS_HEADERS).json({ success: false, error: '服务器错误，请稍后重试' });
+    return reply(res, 500, { success: false, error: '服务器错误，请稍后重试' });
   }
 };
 
