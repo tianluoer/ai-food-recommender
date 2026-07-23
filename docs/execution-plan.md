@@ -137,12 +137,17 @@
 | 2 | 后端 API 实现 | ✅ 已完成 | 2026-07-22 | 2026-07-22 |
 | 3 | 前端 UI 实现 | ✅ 已完成 | 2026-07-22 | 2026-07-22 |
 | 4 | 动画与体验打磨 | ✅ 已完成 | 2026-07-22 | 2026-07-22 |
-| 5 | 部署上线 | 🔄 进行中 | 2026-07-22 | - |
+| 5 | 部署上线 | ✅ 已完成 | 2026-07-22 | 2026-07-23 |
 
 > 状态图例：⬜ 待开始 | 🔄 进行中 | ✅ 已完成 | ❌ 阻塞
 
-## Phase 5 当前阻塞
+## 部署信息
 
-API 函数返回 `FUNCTION_INVOCATION_FAILED`，极简测试端点同样失败。
+- **仓库**: `github.com/tianluoer/ai-food-recommender`
+- **网址**: `https://ai-food-recommender-two.vercel.app`
+- **环境变量**: `DEEPSEEK_API_KEY` 已配置
+- **自动部署**: Git push → Vercel 自动构建发布
 
-**排查方向**：`vercel.json` 缺少显式构建器声明（`@vercel/node` + `@vercel/static`），Vercel 可能无法正确识别混合项目（静态 HTML + API 函数）。明天更换 `vercel.json` 格式为 v3 builds 模式。详见 `dev-logs/2026-07-22.md`。
+## 已解决问题
+
+- `FUNCTION_INVOCATION_FAILED` 是因为 `res.set()` 在 Vercel 运行时不可用，改用 `res.setHeader()` 后解决
