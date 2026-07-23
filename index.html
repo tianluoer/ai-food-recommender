@@ -68,12 +68,29 @@
     .q-emoji { font-size: 52px; margin-bottom: 12px; }
     .q-text  {
       font-size: 20px; font-weight: 600; color: var(--text);
-      margin-bottom: 28px; line-height: 1.5; max-width: 360px;
+      margin-bottom: 28px; line-height: 1.5; max-width: 360px; min-height: 32px;
     }
+    .q-text .cursor {
+      display: inline-block; width: 2px; height: 1em; background: var(--orange);
+      margin-left: 2px; animation: blink 0.8s step-end infinite; vertical-align: text-bottom;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
     .q-hint  { font-size: 13px; color: var(--text-light); margin-bottom: 6px; }
 
     /* ── 选项 ── */
     .options { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+    .options.animate-in .opt-btn {
+      animation: optSlideUp 0.35s ease backwards;
+    }
+    .options.animate-in .opt-btn:nth-child(1) { animation-delay: 0s; }
+    .options.animate-in .opt-btn:nth-child(2) { animation-delay: 0.06s; }
+    .options.animate-in .opt-btn:nth-child(3) { animation-delay: 0.12s; }
+    .options.animate-in .opt-btn:nth-child(4) { animation-delay: 0.18s; }
+    .options.animate-in .opt-btn:nth-child(5) { animation-delay: 0.24s; }
+    @keyframes optSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
     .opt-btn {
       width: 100%; padding: 16px 20px; border: 2px solid #FFD4BF; border-radius: 16px;
       background: var(--white); color: var(--text); font-size: 16px; text-align: left;
@@ -206,7 +223,7 @@
       }
     }
 
-    // ── 问题页 ──
+    // ── 问题页（含打字机效果） ──
     function showQuestion(question, options, round) {
       const page = el('div', { class: 'page' });
 
@@ -219,27 +236,46 @@
       page.appendChild(prog);
 
       // emoji
-      const emoji = el('div', { class: 'q-emoji' });
-      emoji.textContent = pickEmoji(round);
-      page.appendChild(emoji);
+      const qEmoji = el('div', { class: 'q-emoji' });
+      qEmoji.textContent = pickEmoji(round);
+      page.appendChild(qEmoji);
 
-      // 问题文字
+      // 问题文字（先空着，打字机填充）
       const qt = el('div', { class: 'q-text' });
-      qt.textContent = question;
       page.appendChild(qt);
 
-      // 选项
-      const opts = el('div', { class: 'options' });
+      // 选项容器（先隐藏，打完字再显示）
+      const optsWrap = el('div', { class: 'options' });
+      optsWrap.style.opacity = '0';
       options.forEach((opt, i) => {
         const btn = el('button', { class: 'opt-btn' });
-        const label = String.fromCharCode(65 + i); // A B C D E
+        const label = String.fromCharCode(65 + i);
         btn.innerHTML = `<span class="opt-label">${label}</span> ${esc(opt.replace(/^[A-E][.、．) ]\s*/, ''))}`;
         btn.addEventListener('click', () => send(opt));
-        opts.appendChild(btn);
+        optsWrap.appendChild(btn);
       });
-      page.appendChild(opts);
+      page.appendChild(optsWrap);
 
       render(page);
+
+      // ── 打字机逐字显示 ──
+      const chars = [...question];
+      let i = 0;
+      function tick() {
+        if (i < chars.length) {
+          qt.textContent += chars[i];
+          i++;
+          const delay = /[，。！？、\n]/.test(chars[i - 1]) ? 80 : 30;
+          setTimeout(tick, delay);
+        } else {
+          // 打完 → 移除光标 → 显示选项
+          qt.classList.remove('typing');
+          optsWrap.style.transition = 'opacity 0.3s';
+          optsWrap.style.opacity = '1';
+          optsWrap.classList.add('animate-in');
+        }
+      }
+      tick();
     }
 
     // ── 加载页 ──
