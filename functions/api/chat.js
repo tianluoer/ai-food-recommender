@@ -244,6 +244,11 @@ function isMismatched(question, options) {
     const staple = /饭|面|馒头|饼|粉|米/;
     if (!options.some(o => staple.test(o))) return true;
   }
+  // 问份量/大小/吃饱 → 选项应是份量描述（大份/小份/单人），不能是具体菜名
+  if (/份量|分量|大小份|吃饱|对付|胃口|食量|几人|几个/.test(q)) {
+    const portion = /[大小中]份|[大小中]碗|单人|双人|[一二三]人|吃饱|对付|量|加量/;
+    if (!options.every(o => portion.test(o))) return true;
+  }
   return false;
 }
 
