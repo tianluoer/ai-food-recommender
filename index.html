@@ -244,7 +244,7 @@
       const qt = el('div', { class: 'q-text' });
       page.appendChild(qt);
 
-      // 选项容器（先隐藏，打完字再显示）
+      // 选项容器
       const optsWrap = el('div', { class: 'options' });
       optsWrap.style.opacity = '0';
       options.forEach((opt, i) => {
@@ -254,6 +254,14 @@
         btn.addEventListener('click', () => send(opt));
         optsWrap.appendChild(btn);
       });
+
+      // 「换一批」按钮
+      const refreshBtn = el('button', { class: 'opt-btn' });
+      refreshBtn.style.cssText = 'margin-top:4px;border:2px dashed #FFB088;color:#FF6B35;justify-content:center;text-align:center';
+      refreshBtn.innerHTML = '🔄 都不想，换一批';
+      refreshBtn.addEventListener('click', () => send('换一批，给不同的选项'));
+      optsWrap.appendChild(refreshBtn);
+
       page.appendChild(optsWrap);
 
       render(page);
