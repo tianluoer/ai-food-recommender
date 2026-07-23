@@ -106,13 +106,19 @@ export async function onRequest({ request, env }) {
     // 选择题模式
     let { question, options } = parseMultipleChoice(aiText);
 
+    // 检测问卷不匹配（如问预算却给菜名），触发修复
+    if (options.length >= 2 && isMismatched(question, options)) {
+      try {
+        const fixed = await fixOptions(env, question);
+        if (fixed.length >= 2) options = fixed;
+      } catch {}
+    }
+
     // 如果解析不到足够选项，追加 API 调用专门生成选项
     if (options.length < 2) {
       try {
         const fixedOptions = await fixOptions(env, question);
-        if (fixedOptions.length >= 2) {
-          options = fixedOptions;
-        }
+        if (fixedOptions.length >= 2) options = fixedOptions;
       } catch {}
     }
 
@@ -213,6 +219,26 @@ function parseMultipleChoice(text) {
     question: questionLines.join('\n') || '来选一个吧~ 😋',
     options,
   };
+}
+
+// ── 检测问卷与选项是否不匹配 ──
+function isMismatched(question, options) {
+  const q = question;
+  const allOpts = options.join(' ');
+
+  // 问预算 → 选项应含价格关键词
+  if (/预算|价格|多少钱|多少预算|花多少/.test(q) && !/[0-9]+元|块|¥/.test(allOpts)) {
+    return true;
+  }
+  // 问饮品/喝 → 选项不应是饭菜
+  if (/饮品|喝|饮料|可乐|茶|汤/.test(q) && /饭|面|肉|鸡|鱼|虾|锅|菜/.test(allOpts) && !/水|汁|乐|茶|汤/.test(allOpts)) {
+    return true;
+  }
+  // 问主食/饭/面 → 选项应有主食关键词
+  if (/主食|饭|面|馒头|饼/.test(q) && !/饭|面|馒头|饼|粉/.test(allOpts)) {
+    return true;
+  }
+  return false;
 }
 
 // ── 二次调用修复选项 ──
