@@ -1,4 +1,4 @@
-# 环境变量（包含 API Key，绝对不能提交）
+# 环境变量
 .env
 .env.local
 .env.*.local
@@ -6,15 +6,19 @@
 # 依赖
 node_modules/
 
-# Vercel 部署文件
+# Vercel
 .vercel
+
+# Cloudflare / Wrangler
+.wrangler/
 
 # 系统文件
 .DS_Store
 Thumbs.db
 
+# IDE
+.vscode/
+.idea/
+
 # 临时脚本
 push.sh
-
-.vercel
-.env*
